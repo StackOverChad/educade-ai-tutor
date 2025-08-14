@@ -1,23 +1,13 @@
-# --- Core AI & Database (Pinned for consistency) ---
-qdrant-client==1.9.0
-langchain-huggingface==0.0.3
-langchain-community==0.2.5
-langchain==0.2.5  # <-- Corrected version
-sentence-transformers==2.7.0
-openai==1.30.1
-python-dotenv==1.0.1
-
-# --- Web & UI ---
-streamlit==1.35.0
-streamlit-mic-recorder==0.0.8
-gTTS==2.5.1
-
-# --- Utilities ---
-pypdf
-# The following are not needed for the Streamlit app itself
-# but are good to keep for record-keeping if you expand later.
-# fastapi
-# uvicorn[standard]
-# python-multipart
-# pydantic
-# requests
+langchain-huggingface
+python-dotenv
+fastapi
+uvicorn[standard]
+qdrant-client
+sentence-transformers
+openai
+textstat
+gTTS
+python-multipart
+pydantic
+requests
+streamlit-mic-recorder
