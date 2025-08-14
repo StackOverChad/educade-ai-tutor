@@ -8,20 +8,21 @@ from openai import OpenAI
 import re
 
 # --- HYBRID CREDENTIALS LOADER ---
+# This block of code works BOTH locally and on Streamlit Cloud.
 qdrant_url = None
 qdrant_api_key = None
 openai_api_key = None
 error_message = None
 
 try:
-    # Primary method for Streamlit Cloud deployment
+    # This is the primary method for Streamlit Cloud deployment
     qdrant_url = st.secrets["QDRANT_URL"]
     qdrant_api_key = st.secrets["QDRANT_API_KEY"]
     openai_api_key = st.secrets["OPENAI_API_KEY"]
     if not qdrant_url or not qdrant_api_key or not openai_api_key:
         error_message = "One or more secrets are empty in the Streamlit Cloud dashboard."
 except (KeyError, FileNotFoundError):
-    # Fallback for local development
+    # This is the fallback for local development
     load_dotenv()
     qdrant_url = os.getenv("QDRANT_URL")
     qdrant_api_key = os.getenv("QDRANT_API_KEY")
@@ -30,6 +31,7 @@ except (KeyError, FileNotFoundError):
         error_message = "Could not find credentials in the .env file for local development."
 
 # --- INITIALIZE CLIENTS ---
+# Initialize clients only if all credentials were successfully loaded
 if not error_message:
     qdrant_client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
     openai_client = OpenAI(api_key=openai_api_key)
@@ -38,14 +40,9 @@ else:
     openai_client = None
 
 # --- CONSTANTS AND CONFIGS ---
-#
-# --- THIS IS THE CRITICAL LINE ---
-# The collection name is now permanently set to the correct one.
+# Use the new, clean collection name to avoid any conflicts
 COLLECTION_NAME = "educade_data_v1"
-#
-#
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
 
 LANGUAGE_CONFIGS = {
      "en": { "name": "English", "english_name": "English", "requires_translation": False, "system_prompt": "You are a playful and encouraging tutor for young kids. When a kid asks a question, you respond with a hint or a question back to make them think and guess the answer interactively. Keep the conversation friendly, simple, fun, and strictly in English." },
@@ -74,9 +71,9 @@ LANGUAGE_CONFIGS = {
 }
 
 
-
 # --- HELPER FUNCTIONS ---
 def should_generate_image(text_response):
+    """Decide if a response is suitable for image generation and extract the keyword."""
     prompt = f"Extract a simple, visualizable concept (like 'a happy lion', 'the planet Saturn') from this text. If none, say 'None'. Text: \"{text_response}\""
     try:
         completion = openai_client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}], temperature=0.0, max_tokens=15)
@@ -85,6 +82,7 @@ def should_generate_image(text_response):
     except: return None
 
 def generate_illustration(keyword):
+    """Generates an image using DALL-E 3 and returns the URL."""
     image_prompt = f"a cute cartoon drawing of {keyword}, for a child's storybook, vibrant colors, simple and friendly style"
     try:
         response = openai_client.images.generate(model="dall-e-3", prompt=image_prompt, size="1024x1024", quality="standard", n=1)
@@ -94,6 +92,11 @@ def generate_illustration(keyword):
 
 # --- MAIN RAG FUNCTION ---
 def get_answer(messages, grade, subject, lang, child_name, app_mode):
+    """
+    Main function to get a response from the AI.
+    Includes robust error handling for configuration and database issues.
+    """
+    # First, check if clients were initialized correctly.
     if error_message or not qdrant_client or not openai_client:
         st.error(f"Configuration Error: {error_message or 'Clients could not be initialized.'}")
         return {"answer": "I can't connect to my brain right now. Please tell my owner to check the API Keys and Secrets.", "image_url": None, "choices": None}
@@ -120,6 +123,7 @@ def get_answer(messages, grade, subject, lang, child_name, app_mode):
                     ]
                 )
             )
+            # Check if any results were found
             if not search_results:
                 context = "No specific information found in my books for that. I'll use my general knowledge."
             else:
