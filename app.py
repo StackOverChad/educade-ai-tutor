@@ -10,8 +10,9 @@ import io
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Sparky AI Tutor", page_icon="🤖", layout="centered")
 
-# --- STYLING FUNCTIONS ---
+# --- STYLING FUNCTIONS (UNCHANGED) ---
 def apply_standalone_styling(image_file):
+    # ... (this function is the same)
     if not os.path.exists(image_file): return
     with open(image_file, "rb") as f: img_data = f.read()
     b64_encoded = base64.b64encode(img_data).decode()
@@ -30,6 +31,7 @@ def apply_standalone_styling(image_file):
     st.markdown(style, unsafe_allow_html=True)
 
 def apply_embed_styling():
+    # ... (this function is the same)
     style = """
         <style>
         .stApp { background: transparent !important; }
@@ -39,18 +41,22 @@ def apply_embed_styling():
     """
     st.markdown(style, unsafe_allow_html=True)
 
-# --- HELPER FUNCTIONS ---
+
+# --- HELPER FUNCTIONS (UNCHANGED, except the guard clause which is good to keep) ---
 def list_grades():
+    # ...
     if not os.path.exists("books"): os.makedirs("books")
     return sorted([d for d in os.listdir("books") if os.path.isdir(os.path.join("books", d))])
 
 def list_subjects(grade):
+    # ...
     if not grade: return []
     path = os.path.join("books", grade)
     if not os.path.exists(path): return []
     return sorted([d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))])
 
 def transcribe_voice(audio_bytes):
+    # ...
     if not audio_bytes: return ""
     audio_file = io.BytesIO(audio_bytes)
     audio_file.name = "voice_question.wav"
@@ -64,13 +70,12 @@ def transcribe_voice(audio_bytes):
             return ""
 
 def send_message(user_text=None):
-    # --- THIS IS THE CRITICAL FIX ---
-    # Guard Clause: Check if grade and subject are selected before proceeding.
+    # ...
     if not st.session_state.get('selected_grade') or not st.session_state.get('selected_subject'):
         st.toast("Please select a grade and subject first! ⚙️", icon="⚠️")
-        return # Stop the function here to prevent the crash
-
+        return
     text_to_send = user_text if user_text is not None else st.session_state.get('user_input', '')
+    # ... (rest of the function is the same)
     text_to_send = text_to_send.strip()
     if text_to_send:
         st.session_state.messages.append({"role": "user", "content": text_to_send})
@@ -88,6 +93,7 @@ def send_message(user_text=None):
             except Exception: st.session_state.audio_to_play = None
         st.session_state.user_input = ""
 
+# ... (all other helper functions are the same)
 def reset_conversation():
     name = st.session_state.get('child_name'); mode = st.session_state.get('app_mode'); lang_code = st.session_state.get('selected_lang_code')
     grade = st.session_state.get('selected_grade'); subject = st.session_state.get('selected_subject')
@@ -118,14 +124,20 @@ def display_chat_message(msg):
         html = f'<div style="{container_style.format(align=align)}"><div style="font-size: 1.5rem;">{avatar}</div>{content_html}</div>'
     st.markdown(html, unsafe_allow_html=True)
 
+
 # --- UI & APP LOGIC ---
 is_embedded = st.query_params.get("embed") == "true"
 if is_embedded: apply_embed_styling()
 else: apply_standalone_styling("./assets/background.png")
 
-openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# --- SECOND CRITICAL FIX ---
+# Initialize the OpenAI client using st.secrets
+openai_client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
+
+# ... (rest of the file is the same)
 if 'child_name' not in st.session_state:
+    # ...
     if not is_embedded: st.title("🚀 Welcome!")
     st.subheader("What should Sparky call you?")
     name = st.text_input("My name is...", label_visibility="collapsed")
@@ -133,6 +145,7 @@ if 'child_name' not in st.session_state:
         st.session_state.child_name = name; st.session_state.app_mode = "Tutor Mode"; st.session_state.messages = []
         st.rerun()
 else:
+    # ...
     if is_embedded:
         st.markdown(f"<h1>🚀 Sparky's Universe for {st.session_state.child_name}!</h1>", unsafe_allow_html=True)
     else:

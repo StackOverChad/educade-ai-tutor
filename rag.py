@@ -1,5 +1,5 @@
 import os
-from dotenv import load_dotenv
+import streamlit as st # <-- ADD THIS IMPORT
 from langchain_huggingface import HuggingFaceEmbeddings
 from qdrant_client import QdrantClient
 from openai import OpenAI
@@ -13,7 +13,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 COLLECTION_NAME = "kids_ai"
 
-qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+qdrant_client = QdrantClient(
+    url=st.secrets["QDRANT_URL"], 
+    api_key=st.secrets["QDRANT_API_KEY"],
+)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
@@ -127,7 +130,7 @@ def get_answer(messages, grade, subject, lang, child_name, app_mode):
         
         # (This part is unchanged from before)
         question_vector = embeddings.embed_query(user_message)
-        search_results = qdrant_client.search(collection_name=COLLECTION_NAME, query_vector=question_vector, limit=3, query_filter={"must": [{"key": "grade", "match": {"value": grade}}, {"key": "subject", "match": {"value": subject}}]})
+         search_results = qdrant_client.search(collection_name=COLLECTION_NAME, query_vector=question_vector, limit=3, query_filter={"must": [{"key": "grade", "match": {"value": grade}}, {"key": "subject", "match": {"value": subject}}]})
         context = "\n".join([hit.payload.get("text", "") for hit in search_results])
 
         if config.get("requires_translation", False):
