@@ -11,21 +11,12 @@ import io
 st.set_page_config(page_title="Sparky AI Tutor", page_icon="🤖", layout="centered")
 
 # --- STYLING FUNCTIONS ---
-
 def apply_standalone_styling(image_file):
-    """
-    Applies the beautiful space theme for direct viewing.
-    This now includes the dark background color.
-    """
     if not os.path.exists(image_file): return
     with open(image_file, "rb") as f: img_data = f.read()
     b64_encoded = base64.b64encode(img_data).decode()
     style = f"""
         <style>
-        /* Force a dark base for standalone mode */
-        body {{
-            background-color: #0E1117;
-        }}
         .stApp {{ background: transparent; }}
         .stApp::before {{
             content: ""; position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: -1;
@@ -39,30 +30,16 @@ def apply_standalone_styling(image_file):
     st.markdown(style, unsafe_allow_html=True)
 
 def apply_embed_styling():
-    """
-    Polishes the default light theme for a compact chat widget look.
-    """
     style = """
         <style>
-        /* Core layout and padding adjustments */
         .stApp { background: transparent !important; }
-        .main .block-container {
-            padding: 0.75rem 1rem 0.5rem 1rem !important;
-        }
-        
-        /* Heading size and margin fix */
-        h1 {
-            font-size: 20px !important;
-            font-weight: 600 !important;
-            color: #1E293B !important; /* A professional dark gray */
-            padding: 0 !important;
-            margin-bottom: 1rem !important;
-        }
+        .main .block-container { padding: 0.75rem 1rem 1rem 1rem !important; }
+        h1 { font-size: 20px !important; font-weight: 600 !important; color: #1E293B !important; padding: 0 !important; margin-bottom: 1rem !important; }
         </style>
     """
     st.markdown(style, unsafe_allow_html=True)
 
-# --- HELPER FUNCTIONS (UNCHANGED) ---
+# --- HELPER FUNCTIONS ---
 def list_grades():
     if not os.path.exists("books"): os.makedirs("books")
     return sorted([d for d in os.listdir("books") if os.path.isdir(os.path.join("books", d))])
@@ -87,6 +64,12 @@ def transcribe_voice(audio_bytes):
             return ""
 
 def send_message(user_text=None):
+    # --- THIS IS THE CRITICAL FIX ---
+    # Guard Clause: Check if grade and subject are selected before proceeding.
+    if not st.session_state.get('selected_grade') or not st.session_state.get('selected_subject'):
+        st.toast("Please select a grade and subject first! ⚙️", icon="⚠️")
+        return # Stop the function here to prevent the crash
+
     text_to_send = user_text if user_text is not None else st.session_state.get('user_input', '')
     text_to_send = text_to_send.strip()
     if text_to_send:
