@@ -50,10 +50,7 @@ LANGUAGE_CONFIGS = {
 }
 
 def should_generate_image(text_response):
-    """
-    Decide if a response is suitable for image generation and extract the keyword.
-    Returns the keyword (e.g., "a volcano") or None.
-    """
+    """Decide if a response is suitable for image generation and extract the keyword."""
     prompt = f"""
     Read the following tutor's response to a child.
     Does this response describe a single, clear, visualizable object or concept?
@@ -74,7 +71,7 @@ def should_generate_image(text_response):
             temperature=0.0, max_tokens=15
         )
         result = completion.choices[0].message.content.strip()
-        if result.lower() == 'none':
+        if result.lower() == 'none' or len(result) == 0:
             return None
         return result
     except Exception:
@@ -97,44 +94,27 @@ def generate_illustration(keyword):
         return None
 
 def get_answer(messages, grade, subject, lang, child_name, app_mode):
-    """
-    Main function, now handles different modes and features.
-    """
+    """Main function, now handles different modes and features."""
     user_message = messages[-1]["content"]
     final_answer = ""
     image_url = None
     choices = None
 
     if app_mode == "Story Mode":
-        # --- STORY MODE LOGIC ---
-        story_prompt = f"""
-        You are a master storyteller for a child named {child_name}.
-        Continue the story based on the child's last choice.
-        The story should be educational and related to {subject} for {grade}.
-        End your response with a clear choice for the child using the format [CHOICE: Option 1 | Option 2].
-        Keep the story engaging, magical, and fun.
-        """
-        story_messages = [
-            {"role": "system", "content": story_prompt},
-            *messages[1:] # Include previous parts of the story
-        ]
+        story_prompt = f"You are a master storyteller for a child named {child_name}. Continue the story based on the child's last choice. The story should be educational and related to {subject} for {grade}. End your response with a clear choice for the child using the format [CHOICE: Option 1 | Option 2]. Keep the story engaging, magical, and fun."
+        story_messages = [{"role": "system", "content": story_prompt}, *messages[1:]]
         completion = openai_client.chat.completions.create(model="gpt-4o-mini", messages=story_messages, temperature=0.8)
         final_answer = completion.choices[0].message.content
 
-    else: # Default is "Tutor Mode"
-        # --- TUTOR MODE LOGIC (3-step pipeline) ---
+    else: # Tutor Mode
         config = LANGUAGE_CONFIGS.get(lang, LANGUAGE_CONFIGS["en"])
-        
-        # Format the system prompt with the child's name
         config["system_prompt"] = config["system_prompt"].format(name=child_name)
         
-        # (This part is unchanged from before)
         question_vector = embeddings.embed_query(user_message)
-         search_results = qdrant_client.search(collection_name=COLLECTION_NAME, query_vector=question_vector, limit=3, query_filter={"must": [{"key": "grade", "match": {"value": grade}}, {"key": "subject", "match": {"value": subject}}]})
+        search_results = qdrant_client.search(collection_name=COLLECTION_NAME, query_vector=question_vector, limit=3, query_filter={"must": [{"key": "grade", "match": {"value": grade}}, {"key": "subject", "match": {"value": subject}}]})
         context = "\n".join([hit.payload.get("text", "") for hit in search_results])
 
         if config.get("requires_translation", False):
-            # Non-English pipeline...
             extractor_prompt = f"Extract the single most important keyword from the context that answers the question. Output ONLY that keyword.\nQuestion: \"{user_message}\"\nContext: \"{context}\"\nKeyword:"
             extractor_completion = openai_client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": extractor_prompt}], temperature=0.0, max_tokens=10)
             extracted_fact_en = extractor_completion.choices[0].message.content.strip() or "information"
@@ -147,22 +127,17 @@ def get_answer(messages, grade, subject, lang, child_name, app_mode):
             final_completion = openai_client.chat.completions.create(model="gpt-4o-mini", messages=generator_messages, temperature=0.7)
             final_answer = final_completion.choices[0].message.content
         else:
-            # English pipeline...
             updated_messages = [{"role": "system", "content": config["system_prompt"]}, *messages[1:], {"role": "system", "content": f"Context:\n{context}"}]
             completion = openai_client.chat.completions.create(model="gpt-4o-mini", messages=updated_messages, temperature=0.7)
             final_answer = completion.choices[0].message.content
 
-        # --- IMAGE GENERATION LOGIC (for Tutor Mode) ---
         image_keyword = should_generate_image(final_answer)
         if image_keyword:
             image_url = generate_illustration(image_keyword)
 
-    # --- PARSE CHOICES from story response ---
     choice_match = re.search(r'\[CHOICE:\s*(.*?)\s*\]', final_answer)
     if choice_match:
-        # Clean up the answer text by removing the choice syntax
         final_answer = final_answer.replace(choice_match.group(0), "").strip()
-        # Split the choices into a list
         choices = [choice.strip() for choice in choice_match.group(1).split('|')]
 
     return {"answer": final_answer, "image_url": image_url, "choices": choices}
