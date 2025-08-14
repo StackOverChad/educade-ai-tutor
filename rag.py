@@ -40,7 +40,8 @@ else:
     openai_client = None
 
 # --- CONSTANTS AND CONFIGS ---
-COLLECTION_NAME = "kids_ai"
+# Use the new, clean collection name to avoid any conflicts
+COLLECTION_NAME = "educade_data_v1"
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 LANGUAGE_CONFIGS = {
@@ -69,8 +70,10 @@ LANGUAGE_CONFIGS = {
     # ... Add all other languages here, ensuring the system_prompt includes "{name}" ...
 }
 
+
 # --- HELPER FUNCTIONS ---
 def should_generate_image(text_response):
+    """Decide if a response is suitable for image generation and extract the keyword."""
     prompt = f"Extract a simple, visualizable concept (like 'a happy lion', 'the planet Saturn') from this text. If none, say 'None'. Text: \"{text_response}\""
     try:
         completion = openai_client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}], temperature=0.0, max_tokens=15)
@@ -79,6 +82,7 @@ def should_generate_image(text_response):
     except: return None
 
 def generate_illustration(keyword):
+    """Generates an image using DALL-E 3 and returns the URL."""
     image_prompt = f"a cute cartoon drawing of {keyword}, for a child's storybook, vibrant colors, simple and friendly style"
     try:
         response = openai_client.images.generate(model="dall-e-3", prompt=image_prompt, size="1024x1024", quality="standard", n=1)
@@ -88,6 +92,10 @@ def generate_illustration(keyword):
 
 # --- MAIN RAG FUNCTION ---
 def get_answer(messages, grade, subject, lang, child_name, app_mode):
+    """
+    Main function to get a response from the AI.
+    Includes robust error handling for configuration and database issues.
+    """
     # First, check if clients were initialized correctly.
     if error_message or not qdrant_client or not openai_client:
         st.error(f"Configuration Error: {error_message or 'Clients could not be initialized.'}")
@@ -115,11 +123,15 @@ def get_answer(messages, grade, subject, lang, child_name, app_mode):
                     ]
                 )
             )
-            context = "\n".join([hit.payload.get("text", "") for hit in search_results])
+            # Check if any results were found
+            if not search_results:
+                context = "No specific information found in my books for that. I'll use my general knowledge."
+            else:
+                context = "\n".join([hit.payload.get("text", "") for hit in search_results])
         
         except UnexpectedResponse:
             st.error("Oh no! Sparky's memory bank (database collection) seems to be missing or empty. Please ask the website owner to re-ingest the learning materials.")
-            return {"answer": "I can't seem to access my knowledge right now. Please tell my owner to check the database connection and re-upload the book data!", "image_url": None, "choices": None}
+            return {"answer": "I can't seem to access my knowledge right now. Please tell my owner to check the database and re-upload the book data!", "image_url": None, "choices": None}
         except Exception as e:
             st.error(f"An unexpected database error occurred. This might be a connection issue. Please try again. Error: {e}")
             return {"answer": "I'm having a little trouble thinking right now. Please try again in a moment.", "image_url": None, "choices": None}
