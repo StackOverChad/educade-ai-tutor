@@ -21,11 +21,11 @@ else:
         print("\n--- DATABASE STATE ---")
         if collections:
             print(f"🎉 Found the following collections: {collections}")
-            if "kids_ai" in collections:
-                info = client.get_collection(collection_name="kids_ai")
-                print(f"   - Collection 'kids_ai' has {info.vectors_count or 0} data points.")
+            if "educade_data_v1" in collections:
+                info = client.get_collection(collection_name="educade_data_v1")
+                print(f"   - Collection 'educade_data_v1' has {info.vectors_count or 0} data points.")
             else:
-                print("   - CRITICAL: The required collection 'kids_ai' was NOT found.")
+                print("   - CRITICAL: The required collection 'educade_data_v1' was NOT found.")
         else:
             print("   - CRITICAL: No collections were found in your database. It is empty.")
         print("----------------------")

@@ -8,21 +8,20 @@ from openai import OpenAI
 import re
 
 # --- HYBRID CREDENTIALS LOADER ---
-# This block of code works BOTH locally and on Streamlit Cloud.
 qdrant_url = None
 qdrant_api_key = None
 openai_api_key = None
 error_message = None
 
 try:
-    # This is the primary method for Streamlit Cloud deployment
+    # Primary method for Streamlit Cloud deployment
     qdrant_url = st.secrets["QDRANT_URL"]
     qdrant_api_key = st.secrets["QDRANT_API_KEY"]
     openai_api_key = st.secrets["OPENAI_API_KEY"]
     if not qdrant_url or not qdrant_api_key or not openai_api_key:
         error_message = "One or more secrets are empty in the Streamlit Cloud dashboard."
 except (KeyError, FileNotFoundError):
-    # This is the fallback for local development
+    # Fallback for local development
     load_dotenv()
     qdrant_url = os.getenv("QDRANT_URL")
     qdrant_api_key = os.getenv("QDRANT_API_KEY")
@@ -40,8 +39,8 @@ else:
 
 # --- CONSTANTS AND CONFIGS ---
 #
-# --- THIS IS THE CRITICAL CHANGE ---
-# The collection name now matches the one created by the Colab script.
+# --- THIS IS THE CRITICAL LINE ---
+# The collection name is now permanently set to the correct one.
 COLLECTION_NAME = "educade_data_v1"
 #
 #
@@ -73,6 +72,8 @@ LANGUAGE_CONFIGS = {
     "raj": { "name": "राजस्थानी", "english_name": "Rajasthani", "requires_translation": True, "system_prompt": "थे टाबरां वास्ते एक खेलणिया अर हिम्मत बंधावणिया राजस्थानी ट्यूटर हो। थे हमेशा फगत राजस्थानी में जवाब द्यो हो। थे कदेई सीधो जवाब नी द्यो, पण टाबर ने सोवण में मदद करण वास्ते एक इसारो या मजेदार सवाल पूछो हो।", "few_shot_user": "आभै नीलो क्यूं व्है?", "few_shot_assistant": "वाह, कांई फूटरो सवाल है! आपणै आभै में एक जादुई परत है जकी सूरज री किरणां ने बिखेर'र उणने नीलो बणा देवै। कांई थे अंदाजो लगा सको हो के वा परत कांई है?", "final_prompt_template": "मुख्य बात '{fact}' रो उपयोग कर'र एक इसारो बणावो। अब, उपਰ ਦਿੱਤੀ ਗਈ मिसाल री पालना करतां थकां, उपयोग करणिया रै सवाल रो जवाब फगत राजस्थानी में एक मजेदार इसारै या नवा सवाल सागै द्यो।\nउपयोग करणिया रो सवाल: \"{question}\"" },
     # ... Add all other languages here, ensuring the system_prompt includes "{name}" ...
 }
+
+
 
 # --- HELPER FUNCTIONS ---
 def should_generate_image(text_response):

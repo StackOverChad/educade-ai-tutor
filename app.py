@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 import base64
-from rag import get_answer, LANGUAGE_CONFIGS, openai_client # Import the already initialized client
+from rag import get_answer, LANGUAGE_CONFIGS, openai_client
 from tts import text_to_speech
 from streamlit_mic_recorder import mic_recorder
 import io
@@ -133,7 +133,11 @@ else:
         st.title(f"🚀 Sparky's Universe for {st.session_state.child_name}!")
     
     with st.sidebar:
-        st.header("⚙️ Settings"); st.radio("Choose a mode:", ["Tutor Mode", "Story Mode"], key="app_mode", on_change=reset_conversation)
+        st.header("⚙️ Settings")
+        # --- THIS IS THE NEW DIAGNOSTIC LINE ---
+        st.info(f"DB Collection: {get_answer.__globals__['COLLECTION_NAME']}")
+        # -------------------------------------
+        st.radio("Choose a mode:", ["Tutor Mode", "Story Mode"], key="app_mode", on_change=reset_conversation)
         language_options = { f"{config['name']} ({config['english_name']})" if code != 'en' else config['name']: code for code, config in LANGUAGE_CONFIGS.items() }
         selected_display_name = st.selectbox("Select Language", options=language_options.keys(), key="lang_select")
         st.session_state.selected_lang_code = language_options[selected_display_name]
