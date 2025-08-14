@@ -1,5 +1,6 @@
 import os
-import streamlit as st # <-- ADD THIS IMPORT
+import streamlit as st
+from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from qdrant_client import QdrantClient
 from openai import OpenAI
@@ -12,12 +13,22 @@ QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 COLLECTION_NAME = "kids_ai"
+try:
+    # Check if we are running on Streamlit Cloud
+    st.secrets["QDRANT_URL"]
+    qdrant_url = st.secrets["QDRANT_URL"]
+    qdrant_api_key = st.secrets["QDRANT_API_KEY"]
+    openai_api_key = st.secrets["OPENAI_API_KEY"]
+except (KeyError, FileNotFoundError):
+    # We are running locally, so load from .env file
+    load_dotenv()
+    qdrant_url = os.getenv("QDRANT_URL")
+    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
 
-qdrant_client = QdrantClient(
-    url=st.secrets["QDRANT_URL"], 
-    api_key=st.secrets["QDRANT_API_KEY"],
-)
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
+# --- INITIALIZE CLIENTS ---
+qdrant_client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+openai_client = OpenAI(api_key=openai_api_key)
 
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 

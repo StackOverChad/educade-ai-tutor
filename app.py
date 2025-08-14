@@ -1,10 +1,9 @@
 import os
 import streamlit as st
 import base64
-from rag import get_answer, LANGUAGE_CONFIGS
+from rag import get_answer, LANGUAGE_CONFIGS, openai_client # Import the already initialized client
 from tts import text_to_speech
 from streamlit_mic_recorder import mic_recorder
-import openai
 import io
 
 # --- PAGE CONFIGURATION ---
@@ -119,8 +118,6 @@ def display_chat_message(msg):
 is_embedded = st.query_params.get("embed") == "true"
 if is_embedded: apply_embed_styling()
 else: apply_standalone_styling("./assets/background.png")
-
-openai_client = openai.OpenAI(api_key=st.secrets.get("OPENAI_API_KEY"))
 
 if 'child_name' not in st.session_state:
     if not is_embedded: st.title("🚀 Welcome!")
