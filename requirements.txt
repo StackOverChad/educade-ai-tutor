@@ -1,6 +1,4 @@
 # This is the definitive requirements file for deployment.
-# It lists only what the Streamlit app needs and lets the cloud
-# resolver handle finding the correct, compatible versions.
 
 # Core AI & Database
 qdrant-client
@@ -8,6 +6,7 @@ langchain-huggingface
 langchain-community
 openai
 python-dotenv
+sentence-transformers # <-- THE MISSING PIECE
 
 # Web & UI
 streamlit
