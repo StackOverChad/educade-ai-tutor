@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Kids AI Helper</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width:700px; margin: 30px auto; padding: 10px; }
+    input, textarea { width: 100%; padding:10px; margin:8px 0; font-size:16px; }
+    button { padding:10px 16px; font-size:16px; }
+    .card { border:1px solid #eee; padding:12px; border-radius:8px; margin-top:12px; }
+    small { color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Kids AI Helper</h1>
+  <p>Ask a question from your book. Leave grade empty for auto-detection.</p>
+
+  <form id="askForm">
+    <textarea id="question" placeholder="Type a question (e.g. What is addition?)" rows="3"></textarea>
+    <input id="grade" placeholder="Grade (0 nursery → 4 grade 4) - optional" />
+    <select id="lang">
+      <option value="en">English</option>
+      <option value="hi">Hindi</option>
+    </select>
+    <button type="submit">Ask</button>
+  </form>
+
+  <div id="result" class="card" style="display:none;">
+    <h3>Answer</h3>
+    <p id="answerText"></p>
+    <p><strong>Detected grade:</strong> <span id="gradeOut"></span></p>
+    <p><strong>Sources:</strong> <span id="sources"></span></p>
+    <audio id="audio" controls></audio>
+  </div>
+
+<script>
+document.getElementById('askForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const q = document.getElementById('question').value;
+  const gradeVal = document.getElementById('grade').value;
+  const lang = document.getElementById('lang').value;
+  const form = new FormData();
+  form.append('question', q);
+  if (gradeVal) form.append('grade', gradeVal);
+  form.append('lang', lang);
+
+  const res = await fetch('/ask', { method: 'POST', body: form });
+  if (!res.ok) {
+    alert('Error from server');
+    return;
+  }
+  const data = await res.json();
+  document.getElementById('answerText').innerText = data.answer;
+  document.getElementById('gradeOut').innerText = data.grade;
+  document.getElementById('sources').innerText = data.sources.join(', ');
+  document.getElementById('audio').src = '/audio/' + data.audio_file.split('/').pop();
+  document.getElementById('result').style.display = 'block';
+});
+</script>
+</body>
+</html>

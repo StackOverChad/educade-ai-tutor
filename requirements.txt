@@ -1,0 +1,11 @@
+fastapi==0.95.2
+uvicorn[standard]==0.21.1
+qdrant-client==1.11.2
+sentence-transformers==2.2.2
+openai==1.0.0
+textstat==0.7.1
+gTTS==2.4.6
+python-multipart==0.0.6
+pydantic==1.10.11
+requests==2.31.0
+streamlit-mic-recorder==0.0.5
