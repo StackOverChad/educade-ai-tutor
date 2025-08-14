@@ -1,3 +1,5 @@
+langchain-huggingface
+python-dotenv
 fastapi
 uvicorn[standard]
 qdrant-client
