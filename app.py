@@ -24,7 +24,7 @@ def apply_standalone_styling(image_file):
             background-size: cover; background-repeat: no-repeat; background-attachment: fixed;
             opacity: 0.4; 
         }}
-        h1, h2, h3, h4, h5, h6 {{ color: white !important; }}
+        h1, h2, h3, h4, h5, h6 {{ color: black !important; }}
         </style>
     """
     st.markdown(style, unsafe_allow_html=True)
