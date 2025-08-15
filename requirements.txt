@@ -1,18 +1,11 @@
-# This is the definitive requirements file for deployment.
-
-# Core AI & Database
+# Final, verified requirements for deployment
 qdrant-client
 langchain-huggingface
 langchain-community
 openai
 python-dotenv
-sentence-transformers # <-- THE MISSING PIECE
-
-# Web & UI
+sentence-transformers
 streamlit
 streamlit-mic-recorder
 gTTS
-
-# Utilities
 pypdf
-textstat
