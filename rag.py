@@ -42,7 +42,7 @@ else:
 # --- CONSTANTS AND CONFIGS ---
 #
 # --- THE FINAL, CLEAN COLLECTION NAME ---
-COLLECTION_NAME = "educade_final_db_v2"
+COLLECTION_NAME = "educade_prod_db"
 #
 #
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
@@ -110,12 +110,10 @@ def get_answer(messages, grade, subject, lang, child_name, app_mode):
             else:
                 context = "\n".join([hit.payload.get("text", "") for hit in search_results])
         
-        except UnexpectedResponse:
-            st.error("Oh no! Sparky's memory bank (database collection) seems to be missing or empty. Please ask the website owner to re-ingest the learning materials.")
-            return {"answer": "I can't seem to access my knowledge right now. Please tell my owner to check the database and re-upload the book data!", "image_url": None, "choices": None}
         except Exception as e:
-            st.error(f"An unexpected database error occurred. This might be a connection issue. Please try again. Error: {e}")
-            return {"answer": "I'm having a little trouble thinking right now. Please try again in a moment.", "image_url": None, "choices": None}
+            # This is the most critical error check.
+            st.error(f"Oh no! Sparky had a problem searching his memory bank. This usually means the data collection is missing or empty. Please ask the website owner to re-ingest the learning materials. Error: {e}")
+            return {"answer": "I can't seem to access my knowledge right now. Please tell my owner to check the database!", "image_url": None, "choices": None}
 
         config = LANGUAGE_CONFIGS.get(lang, LANGUAGE_CONFIGS["en"]).copy()
         config["system_prompt"] = config["system_prompt"].format(name=child_name)
