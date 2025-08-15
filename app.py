@@ -111,7 +111,7 @@ def display_chat_message(msg):
         content_html = f'<div style="{formatted_style}">{msg["content"]}'
         if msg.get("image_url"): content_html += f'<br><img src="{msg["image_url"]}" style="max-width: 100%; border-radius: 15px; margin-top: 8px;">'
         content_html += '</div>'
-        html = f'<div style="{container_state.format(align=align)}"><div style="font-size: 1.5rem;">{avatar}</div>{content_html}</div>'
+        html = f'<div style="{container_style.format(align=align)}"><div style="font-size: 1.5rem;">{avatar}</div>{content_html}</div>'
     st.markdown(html, unsafe_allow_html=True)
 
 # --- UI & APP LOGIC ---
@@ -133,7 +133,11 @@ else:
         st.title(f"🚀 Sparky's Universe for {st.session_state.child_name}!")
     
     with st.sidebar:
-        st.header("⚙️ Settings"); st.radio("Choose a mode:", ["Tutor Mode", "Story Mode"], key="app_mode", on_change=reset_conversation)
+        st.header("⚙️ Settings")
+        # --- THIS IS THE NEW DIAGNOSTIC LINE ---
+        st.info(f"DB Collection: {get_answer.__globals__['COLLECTION_NAME']}")
+        # -------------------------------------
+        st.radio("Choose a mode:", ["Tutor Mode", "Story Mode"], key="app_mode", on_change=reset_conversation)
         language_options = { f"{config['name']} ({config['english_name']})" if code != 'en' else config['name']: code for code, config in LANGUAGE_CONFIGS.items() }
         selected_display_name = st.selectbox("Select Language", options=language_options.keys(), key="lang_select")
         st.session_state.selected_lang_code = language_options[selected_display_name]
