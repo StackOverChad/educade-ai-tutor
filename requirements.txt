@@ -1,12 +1,12 @@
 # Final, verified requirements for Groq + Pinecone deployment
-pinecone-client
+pinecone-python     # <-- The critical fix
 langchain-huggingface
 langchain-community
-openai # Still needed for transcription and potentially DALL-E
+openai
 python-dotenv
 sentence-transformers
 streamlit
 streamlit-mic-recorder
 gTTS
 pypdf
-groq # <-- The new library
+groq
