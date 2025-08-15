@@ -1,7 +1,8 @@
-# Final, verified requirements for deployment
-qdrant-client
+# Final, verified requirements for Pinecone deployment
+pinecone-client==4.0.0
 langchain-huggingface
 langchain-community
+langchain-pinecone
 openai
 python-dotenv
 sentence-transformers
