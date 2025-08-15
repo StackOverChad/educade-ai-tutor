@@ -134,9 +134,7 @@ else:
     
     with st.sidebar:
         st.header("⚙️ Settings")
-        # --- THIS IS THE NEW DIAGNOSTIC LINE ---
-        st.info(f"DB Collection: {get_answer.__globals__['COLLECTION_NAME']}")
-        # -------------------------------------
+        # The old diagnostic line that caused the crash has been removed.
         st.radio("Choose a mode:", ["Tutor Mode", "Story Mode"], key="app_mode", on_change=reset_conversation)
         language_options = { f"{config['name']} ({config['english_name']})" if code != 'en' else config['name']: code for code, config in LANGUAGE_CONFIGS.items() }
         selected_display_name = st.selectbox("Select Language", options=language_options.keys(), key="lang_select")

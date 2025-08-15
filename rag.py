@@ -49,7 +49,7 @@ def get_answer(messages, grade, subject, lang, child_name, app_mode):
         else:
             context = "\n".join([match['metadata']['text'] for match in query_response['matches']])
         
-        # (Your full AI response logic would go here)
+        # This is placeholder logic. You would replace this with your full AI response generation.
         final_answer = f"Based on my books, I found this: {context[:100]}..."
         return {"answer": final_answer, "image_url": None, "choices": None}
 
