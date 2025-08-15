@@ -42,7 +42,7 @@ else:
 # --- CONSTANTS AND CONFIGS ---
 #
 # --- THE FINAL, CLEAN COLLECTION NAME ---
-COLLECTION_NAME = "educade_prod_db"
+COLLECTION_NAME = "educade_production_db"
 #
 #
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
