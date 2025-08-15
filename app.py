@@ -55,6 +55,7 @@ def transcribe_voice(audio_bytes):
     audio_file.name = "voice_question.wav"
     with st.spinner("Sparky is listening... 👂"):
         try:
+            # Note: Transcription still uses OpenAI as Groq doesn't have a speech-to-text model.
             transcript = openai_client.audio.transcriptions.create(model="whisper-1", file=audio_file)
             st.toast(f"I heard: \"{transcript.text}\"")
             return transcript.text
@@ -134,7 +135,6 @@ else:
     
     with st.sidebar:
         st.header("⚙️ Settings")
-        # The old diagnostic line that caused the crash has been removed.
         st.radio("Choose a mode:", ["Tutor Mode", "Story Mode"], key="app_mode", on_change=reset_conversation)
         language_options = { f"{config['name']} ({config['english_name']})" if code != 'en' else config['name']: code for code, config in LANGUAGE_CONFIGS.items() }
         selected_display_name = st.selectbox("Select Language", options=language_options.keys(), key="lang_select")
@@ -165,11 +165,18 @@ else:
         for i, choice in enumerate(last_message["choices"]):
             cols[i].button(f"➡️ {choice}", on_click=send_message, args=(choice,), use_container_width=True, key=f"choice_{i}")
     else:
-        def voice_callback():
-            if st.session_state.recorder.get('bytes'): send_message(user_text=transcribe_voice(st.session_state.recorder['bytes']))
-        
+        # --- THIS IS THE CRITICAL FIX FOR VOICE INPUT ---
         col1, col2 = st.columns([0.85, 0.15])
         with col1:
             st.text_input("Ask Sparky a question...", key="user_input", on_change=send_message, label_visibility="collapsed")
         with col2:
-            mic_recorder(start_prompt="🎤", stop_prompt="⏹️", key='recorder', callback=voice_callback, use_container_width=True)
+            # The mic_recorder now returns its state, which we capture.
+            audio_info = mic_recorder(start_prompt="🎤", stop_prompt="⏹️", key='recorder', use_container_width=True)
+
+        # We check the returned state *after* the component has been rendered.
+        if audio_info and audio_info['bytes']:
+            transcribed_text = transcribe_voice(audio_info['bytes'])
+            if transcribed_text:
+                send_message(user_text=transcribed_text)
+                st.rerun() # Rerun to show the new messages immediately
+        # -----------------------------------------------
