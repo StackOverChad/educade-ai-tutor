@@ -3,8 +3,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from pinecone import Pinecone
-from openai import OpenAI # Still needed for transcription/DALL-E
-from groq import Groq # <-- NEW: Import the Groq client
+from openai import OpenAI
 import re
 
 # --- HYBRID CREDENTIALS LOADER (UPDATED FOR GROQ) ---

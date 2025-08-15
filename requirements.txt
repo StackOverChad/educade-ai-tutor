@@ -1,5 +1,5 @@
 # Final, verified requirements for Groq + Pinecone deployment
-pinecone      # <-- The one, true, correct package name
+pinecone
 langchain-huggingface
 langchain-community
 openai
