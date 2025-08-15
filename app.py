@@ -3,7 +3,7 @@ import streamlit as st
 import base64
 from rag import get_answer, LANGUAGE_CONFIGS, openai_client
 from tts import text_to_speech
-from streamlit_mic_recorder import mic_recorder
+# from streamlit_mic_recorder import mic_recorder # No longer needed
 import io
 
 # --- PAGE CONFIGURATION ---
@@ -49,13 +49,13 @@ def list_subjects(grade):
     if not os.path.exists(path): return []
     return sorted([d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))])
 
+# This function is no longer called but is kept in case you re-enable it
 def transcribe_voice(audio_bytes):
     if not audio_bytes: return ""
     audio_file = io.BytesIO(audio_bytes)
     audio_file.name = "voice_question.wav"
     with st.spinner("Sparky is listening... 👂"):
         try:
-            # Note: Transcription still uses OpenAI as Groq doesn't have a speech-to-text model.
             transcript = openai_client.audio.transcriptions.create(model="whisper-1", file=audio_file)
             st.toast(f"I heard: \"{transcript.text}\"")
             return transcript.text
@@ -165,18 +165,6 @@ else:
         for i, choice in enumerate(last_message["choices"]):
             cols[i].button(f"➡️ {choice}", on_click=send_message, args=(choice,), use_container_width=True, key=f"choice_{i}")
     else:
-        # --- THIS IS THE CRITICAL FIX FOR VOICE INPUT ---
-        col1, col2 = st.columns([0.85, 0.15])
-        with col1:
-            st.text_input("Ask Sparky a question...", key="user_input", on_change=send_message, label_visibility="collapsed")
-        with col2:
-            # The mic_recorder now returns its state, which we capture.
-            audio_info = mic_recorder(start_prompt="🎤", stop_prompt="⏹️", key='recorder', use_container_width=True)
-
-        # We check the returned state *after* the component has been rendered.
-        if audio_info and audio_info['bytes']:
-            transcribed_text = transcribe_voice(audio_info['bytes'])
-            if transcribed_text:
-                send_message(user_text=transcribed_text)
-                st.rerun() # Rerun to show the new messages immediately
-        # -----------------------------------------------
+        # --- VOICE INPUT IS NOW DISABLED ---
+        st.text_input("Ask Sparky a question...", key="user_input", on_change=send_message, label_visibility="collapsed")
+        # The mic_recorder has been removed from this section.
