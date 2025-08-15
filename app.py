@@ -3,7 +3,7 @@ import streamlit as st
 import base64
 from rag import get_answer, LANGUAGE_CONFIGS, openai_client
 from tts import text_to_speech
-# from streamlit_mic_recorder import mic_recorder # No longer needed
+from streamlit_mic_recorder import mic_recorder
 import io
 
 # --- PAGE CONFIGURATION ---
@@ -49,7 +49,6 @@ def list_subjects(grade):
     if not os.path.exists(path): return []
     return sorted([d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))])
 
-# This function is no longer called but is kept in case you re-enable it
 def transcribe_voice(audio_bytes):
     if not audio_bytes: return ""
     audio_file = io.BytesIO(audio_bytes)
@@ -135,6 +134,7 @@ else:
     
     with st.sidebar:
         st.header("⚙️ Settings")
+        # The old diagnostic line that caused the crash has been removed.
         st.radio("Choose a mode:", ["Tutor Mode", "Story Mode"], key="app_mode", on_change=reset_conversation)
         language_options = { f"{config['name']} ({config['english_name']})" if code != 'en' else config['name']: code for code, config in LANGUAGE_CONFIGS.items() }
         selected_display_name = st.selectbox("Select Language", options=language_options.keys(), key="lang_select")
@@ -165,6 +165,11 @@ else:
         for i, choice in enumerate(last_message["choices"]):
             cols[i].button(f"➡️ {choice}", on_click=send_message, args=(choice,), use_container_width=True, key=f"choice_{i}")
     else:
-        # --- VOICE INPUT IS NOW DISABLED ---
-        st.text_input("Ask Sparky a question...", key="user_input", on_change=send_message, label_visibility="collapsed")
-        # The mic_recorder has been removed from this section.
+        def voice_callback():
+            if st.session_state.recorder.get('bytes'): send_message(user_text=transcribe_voice(st.session_state.recorder['bytes']))
+        
+        col1, col2 = st.columns([0.85, 0.15])
+        with col1:
+            st.text_input("Ask Sparky a question...", key="user_input", on_change=send_message, label_visibility="collapsed")
+        with col2:
+            mic_recorder(start_prompt="🎤", stop_prompt="⏹️", key='recorder', callback=voice_callback, use_container_width=True)
